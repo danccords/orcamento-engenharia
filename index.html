@@ -126,13 +126,44 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .ctable .w-un{width:110px}.ctable .w-v{width:130px}.ctable .w-c{width:90px}.ctable .w-x{width:40px}
 @media(max-width:640px){
   .ctable thead{display:none}
-  .ctable tr{display:grid;grid-template-columns:1fr 1fr 40px;gap:6px;background:var(--panel2);border-radius:8px;padding:8px;margin-bottom:8px}
+  .ctable tr{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px;background:var(--panel2);border-radius:8px;padding:8px;margin-bottom:8px}
   .ctable td{padding:0}
-  .ctable td:first-child{grid-column:1/-1}
-  .ctable td.c{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .ctable td:first-child{grid-column:1/3;grid-row:1}
+  .ctable td.tx{grid-column:3;grid-row:1}
+  .ctable td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .ctable td.c{grid-column:1/3;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
   .ctable td.c::after{content:"aplica complexidade"}
   .ctable tbody{display:block}
 }
+/* custos */
+.ctable .w-h{width:90px}.ctable .w-cd{width:110px}
+.sug{display:block;background:none;border:0;padding:3px 0 0;font:inherit;font-size:11.5px;color:var(--ok);cursor:pointer;text-align:left;white-space:nowrap}
+.sug:hover{text-decoration:underline}
+.sug.low{color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.kpi b{display:block;font-size:20px;margin-top:4px}
+.kpi.hl{border-color:var(--accent)}.kpi.hl b{color:var(--accent)}
+.kpi span{font-size:12px;color:var(--dim)}
+.costrow{display:grid;grid-template-columns:minmax(0,1fr) 140px 34px;gap:8px;align-items:center;padding:4px 0}
+.costrow.eq{grid-template-columns:minmax(0,1fr) 130px 90px 110px 34px}
+.costrow .pm{text-align:right;font-size:13px;color:var(--muted)}
+.costhead{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.costtot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.costtot b{color:var(--text)}
+@media(max-width:640px){
+  .costrow.eq{grid-template-columns:1fr 1fr 34px}
+  .costrow.eq>:first-child{grid-column:1/3}
+  .costrow.eq .pm{grid-column:1/3;text-align:left}
+  .costhead.eq{display:none}
+}
+.ana{margin-top:14px;padding:12px;border:1px dashed var(--line2);border-radius:10px}
+.ana h4{margin:0 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between}
+.ana h4 span{text-transform:none;letter-spacing:0;font-weight:400;color:var(--dim)}
+.ana .line{padding:4px 0;font-size:13.5px}
+.ana .lucro span:last-child{font-weight:700}
+.ana .pos{color:var(--ok)!important}.ana .neg{color:var(--danger)!important}
 .hint{font-size:12.5px;color:var(--muted);margin:10px 0 0;line-height:1.5}
 .logo-prev{display:flex;align-items:center;gap:12px;margin-top:6px}
 .logo-prev img{max-height:48px;max-width:160px;background:#fff;border-radius:6px;padding:4px}
@@ -200,6 +231,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
     <nav class="tabs">
       <button data-tab="orc" class="on">Orçamento</button>
       <button data-tab="val">Tabela de valores</button>
+      <button data-tab="cus">Custos e margem</button>
       <button data-tab="emp">Empresa e configurações</button>
       <button data-tab="his">Histórico</button>
     </nav>
@@ -258,6 +290,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
       <div id="sum-adj"></div>
       <div class="total"><span>Total geral</span><span class="mono" id="sum-total">R$ 0,00</span></div>
       <div class="meta" id="sum-meta"></div>
+      <div class="ana" id="sum-ana"></div>
       <div class="actions" style="margin-top:16px">
         <button class="btn pri" id="b-pdf">Gerar orçamento (PDF)</button>
       </div>
@@ -272,7 +305,10 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 
 <!-- ================= TABELA DE VALORES ================= -->
 <section class="view" id="v-val">
-  <p class="hint" style="margin:0 0 16px">Cadastre aqui os seus valores fixos. No orçamento, cada serviço puxa os itens desta tabela. Marque <b>Complexidade</b> nos itens que devem ser multiplicados pelo fator Baixa/Média/Alta (normalmente os itens por hora); deixe desmarcado em itens como deslocamento e taxa de visita.</p>
+  <p class="hint" style="margin:0 0 12px">Aqui ficam os seus <b>preços de venda</b>. No orçamento, cada serviço puxa os itens desta tabela.<br>
+  <b>Horas/un</b>: quanto do seu tempo cada unidade consome (1 para itens por hora; ex.: 2 h por folha de desenho). <b>Custo direto</b>: gasto que sai do bolso por unidade (combustível por km, spray por peça…). Com isso o app calcula o <b>preço sugerido</b> de cada item a partir dos seus custos e margem — toque nele para usar.<br>
+  Marque <b>Complexidade</b> nos itens que devem ser multiplicados pelo fator Baixa/Média/Alta; deixe desmarcado em deslocamento e taxa de visita.</p>
+  <div class="card" id="val-banner" style="padding:12px 16px"></div>
   <div id="val-tables"></div>
   <div class="card">
     <h2>Fatores e ajustes</h2>
@@ -281,9 +317,39 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
       <label class="f">Complexidade Média (×)<input type="number" step="0.05" data-cfg="cx.media"></label>
       <label class="f">Complexidade Alta (×)<input type="number" step="0.05" data-cfg="cx.alta"></label>
       <label class="f">Acréscimo de urgência (%)<input type="number" step="1" data-cfg="urgPct"></label>
-      <label class="f">Impostos sobre o total (%)<input type="number" step="0.1" data-cfg="impPct"></label>
     </div>
-    <p class="hint">Impostos: deixe 0 se seus valores já incluem impostos. Se preencher, o percentual é somado ao total do orçamento.</p>
+  </div>
+</section>
+
+<!-- ================= CUSTOS E MARGEM ================= -->
+<section class="view" id="v-cus">
+  <p class="hint" style="margin:0 0 16px">Coloque aqui o que custa manter a empresa funcionando. O app divide tudo pelas horas que você realmente fatura no mês e chega no <b>seu custo por hora</b>. Daí calcula o preço sugerido de cada item e mostra o lucro real de cada orçamento.</p>
+  <div class="card">
+    <h2>Custos fixos mensais</h2>
+    <div class="costrow costhead"><span>Descrição</span><span>Valor por mês (R$)</span><span></span></div>
+    <div id="fixos"></div>
+    <button class="btn ghost sm" style="margin-top:8px" id="add-fixo">+ Adicionar custo</button>
+    <div class="costtot"><span>Total fixos</span><b class="mono" id="tot-fixos"></b></div>
+  </div>
+  <div class="card">
+    <h2>Equipamentos <small>o valor é dividido pela vida útil e vira um custo mensal</small></h2>
+    <div class="costrow eq costhead"><span>Equipamento</span><span>Valor (R$)</span><span>Vida útil (anos)</span><span style="text-align:right">Por mês</span><span></span></div>
+    <div id="equips"></div>
+    <button class="btn ghost sm" style="margin-top:8px" id="add-equip">+ Adicionar equipamento</button>
+    <div class="costtot"><span>Total equipamentos por mês</span><b class="mono" id="tot-equips"></b></div>
+  </div>
+  <div class="card">
+    <h2>Horas, margem e nota fiscal</h2>
+    <div class="fields">
+      <label class="f">Horas produtivas por mês<input type="number" step="1" min="1" data-cfg="custos.horasMes"></label>
+      <label class="f">Margem de lucro (%)<input type="number" step="1" min="0" data-cfg="custos.margem"></label>
+      <label class="f">Imposto da nota fiscal (%)<input type="number" step="0.1" min="0" data-cfg="custos.nf"></label>
+    </div>
+    <p class="hint">Horas produtivas: só as horas que você cobra do cliente (sem contar administrativo, deslocamento parado etc.). Ex.: 22 dias × 5 h = 110 h. Margem: percentual de lucro sobre o custo. Nota fiscal: alíquota do seu regime (ex.: Simples Nacional).</p>
+  </div>
+  <div class="card">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
   </div>
 </section>
 
@@ -359,31 +425,37 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth
 const brDate=s=>{if(!s)return'';const[a,m,d]=s.split('-');return d+'/'+m+'/'+a};
 
 function defaultCfg(){
-  const it=(desc,unid,valor,comp)=>({id:uid(),desc,unid,valor,comp});
+  const it=(desc,unid,valor,comp,hUn,cDir)=>({id:uid(),desc,unid,valor,comp,hUn:hUn??(unid==='h'?1:0),cDir:cDir||0});
+  const fx=(desc,valor)=>({id:uid(),desc,valor}),eq=(desc,valor,anos)=>({id:uid(),desc,valor,anos});
   return {
     itens:{
       scan:[
         it('Hora de escaneamento 3D','h',250,true),
-        it('Visita técnica / mobilização','un',300,false),
-        it('Deslocamento','km',2.5,false),
-        it('Preparação da peça (spray / alvos)','peça',40,true),
+        it('Visita técnica / mobilização','un',300,false,2),
+        it('Deslocamento','km',2.5,false,0,0.9),
+        it('Preparação da peça (spray / alvos)','peça',40,true,0.25,8),
         it('Processamento da malha (STL)','h',150,true)
       ],
       model:[
         it('Modelagem paramétrica (engenharia reversa)','h',180,true),
         it('Modelagem de superfícies complexas','h',220,true),
-        it('Desenho técnico 2D','folha',120,true),
-        it('Relatório de desvio (escaneado × CAD)','relatório',250,false)
+        it('Desenho técnico 2D','folha',120,true,2),
+        it('Relatório de desvio (escaneado × CAD)','relatório',250,false,3)
       ],
       proj:[
         it('Hora de projeto / engenharia','h',200,true),
-        it('Detalhamento para fabricação','folha',150,true),
-        it('Renderização','imagem',120,false),
-        it('Revisão adicional','un',200,false)
+        it('Detalhamento para fabricação','folha',150,true,2),
+        it('Renderização','imagem',120,false,1),
+        it('Revisão adicional','un',200,false,2)
       ]
     },
     cx:{baixa:1,media:1.25,alta:1.5},
     urgPct:30, impPct:0, seq:1,
+    custos:{
+      fixos:[fx('Aluguel',1500),fx('Escritório de contabilidade',400),fx('Mensalidades de software (CAD, scanner…)',600),fx('Internet / telefone',150),fx('Energia',200)],
+      equip:[eq('Scanner 3D',60000,5),eq('Notebook / workstation',10000,3)],
+      horasMes:100, margem:30, nf:6
+    },
     emp:{nome:'DH Tech',sub:'Escaneamento 3D • Engenharia reversa • Projetos',email:'',tel:'',cnpj:'',cidade:'',
       msg:'Prezado(a), conforme solicitado, apresentamos nossa proposta para os serviços descritos abaixo.',
       prazo:'10 dias úteis após aprovação',fat:'50% na aprovação, 50% na entrega',validade:'15 dias',logo:''}
@@ -391,7 +463,11 @@ function defaultCfg(){
 }
 function mergeCfg(c){
   const d=defaultCfg(); if(!c) return d;
-  return {...d,...c,itens:{...d.itens,...(c.itens||{})},cx:{...d.cx,...(c.cx||{})},emp:{...d.emp,...(c.emp||{})}};
+  const m={...d,...c,itens:{...d.itens,...(c.itens||{})},cx:{...d.cx,...(c.cx||{})},emp:{...d.emp,...(c.emp||{})},custos:{...d.custos,...(c.custos||{})}};
+  if(!c.custos&&num(c.impPct)>0)m.custos.nf=num(c.impPct);
+  m.impPct=0;
+  Object.values(m.itens).forEach(list=>list.forEach(it=>{if(it.hUn==null)it.hUn=it.unid==='h'?1:0;if(it.cDir==null)it.cDir=0}));
+  return m;
 }
 let cfg=mergeCfg(load(LS_CFG));
 let hist=load(LS_HIST)||[];
@@ -408,6 +484,24 @@ let q=load(LS_DRAFT)||newQuote();
 SVCS.forEach(s=>{if(!q.svc[s.k])q.svc[s.k]={on:false,cx:'media',linhas:[]}});
 let draftT;function saveDraft(){clearTimeout(draftT);draftT=setTimeout(()=>save(LS_DRAFT,q),250)}
 
+/* ---------- custos ---------- */
+function custoInfo(){
+  const C=cfg.custos;
+  const fixos=C.fixos.reduce((a,f)=>a+num(f.valor),0);
+  const equip=C.equip.reduce((a,e)=>a+(num(e.anos)>0?num(e.valor)/(num(e.anos)*12):0),0);
+  const mensal=fixos+equip,horas=Math.max(num(C.horasMes),1);
+  const hora=mensal/horas,nf=Math.min(num(C.nf),90)/100,mg=num(C.margem)/100;
+  return {fixos,equip,mensal,hora,nf,mg,minHora:hora/(1-nf),sugHora:hora*(1+mg)/(1-nf)};
+}
+const itemCusto=(hUn,cDir,ci)=>num(hUn)*ci.hora+num(cDir);
+const itemSug=(hUn,cDir,ci)=>itemCusto(hUn,cDir,ci)*(1+ci.mg)/(1-ci.nf);
+function lineCost(l){ // custo/un da linha (snapshot, com fallback na tabela)
+  let hUn=l.hUn,cDir=l.cDir;
+  if(hUn==null||cDir==null){let it=null;SVCS.forEach(s=>{it=it||cfg.itens[s.k].find(x=>x.id===l.itemId)});
+    hUn=hUn??(it?it.hUn:(l.unid==='h'?1:0));cDir=cDir??(it?it.cDir:0)}
+  return {hUn:num(hUn),cDir:num(cDir)};
+}
+
 /* ---------- calc ---------- */
 function lineCalc(svcK,l){
   const f=l.comp?num(cfg.cx[q.svc[svcK].cx]||1):1;
@@ -415,18 +509,22 @@ function lineCalc(svcK,l){
   return {unit,sub:unit*num(l.qtd)};
 }
 function calc(){
-  const r={svcs:{},base:0,horas:0};
+  const r={svcs:{},base:0,horas:0,cDir:0};
   SVCS.forEach(s=>{
-    const S=q.svc[s.k];let sub=0,h=0;
-    if(S.on) S.linhas.forEach(l=>{sub+=lineCalc(s.k,l).sub;if(l.unid==='h')h+=num(l.qtd)});
+    const S=q.svc[s.k];let sub=0,h=0,cd=0;
+    if(S.on) S.linhas.forEach(l=>{sub+=lineCalc(s.k,l).sub;const c=lineCost(l);h+=c.hUn*num(l.qtd);cd+=c.cDir*num(l.qtd)});
     r.svcs[s.k]={sub,horas:h};
-    if(S.on){r.base+=sub;r.horas+=h}
+    if(S.on){r.base+=sub;r.horas+=h;r.cDir+=cd}
   });
   r.urg=q.urg?r.base*num(cfg.urgPct)/100:0;
   r.descV=(r.base+r.urg)*num(q.desc)/100;
   r.semImp=r.base+r.urg-r.descV;
   r.imp=r.semImp*num(cfg.impPct)/100;
   r.total=r.semImp+r.imp;
+  const ci=custoInfo();
+  r.custoHoras=r.horas*ci.hora;r.custo=r.custoHoras+r.cDir;
+  r.nfV=r.total*ci.nf;r.lucro=r.total-r.custo-r.nfV;
+  r.margemReal=r.total>0?r.lucro/r.total:0;
   return r;
 }
 
@@ -436,6 +534,8 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.tab));
   if(b.dataset.tab==='his')renderHist();
   if(b.dataset.tab==='orc')renderBlocks();
+  if(b.dataset.tab==='val')renderVal();
+  if(b.dataset.tab==='cus')renderCustos();
   window.scrollTo({top:0});
 });
 
@@ -461,7 +561,7 @@ function renderChips(){
   const on=SVCS.filter(s=>q.svc[s.k].on).map(s=>s.nome);
   document.getElementById('combo').innerHTML=on.length?`Orçando: <b>${on.join(' + ')}</b>`:'Nenhum serviço selecionado.';
 }
-function lineFrom(it){return {itemId:it.id,desc:it.desc,unid:it.unid,valor:it.valor,qtd:1,comp:!!it.comp}}
+function lineFrom(it){return {itemId:it.id,desc:it.desc,unid:it.unid,valor:it.valor,qtd:1,comp:!!it.comp,hUn:num(it.hUn),cDir:num(it.cDir)}}
 
 function renderBlocks(){
   const box=document.getElementById('svc-blocks');
@@ -503,12 +603,12 @@ function renderBlocks(){
       row.querySelector('[data-act=del]').onclick=()=>{S.linhas.splice(+row.dataset.i,1);saveDraft();renderBlocks()};
       row.querySelector('[data-f=item]').onchange=e=>{
         const v=e.target.value;
-        if(v==='__av'){Object.assign(l,{itemId:'',desc:'',comp:false})}
-        else{const it=cfg.itens[k].find(x=>x.id===v);Object.assign(l,{itemId:it.id,desc:it.desc,unid:it.unid,valor:it.valor,comp:!!it.comp})}
+        if(v==='__av'){Object.assign(l,{itemId:'',desc:'',comp:false,hUn:l.unid==='h'?1:0,cDir:0})}
+        else{const it=cfg.itens[k].find(x=>x.id===v);Object.assign(l,lineFrom(it),{qtd:l.qtd})}
         saveDraft();renderBlocks();
       };
       ['qtd','valor','desc','unid'].forEach(f=>{const el=row.querySelector(`[data-f=${f}]`);if(!el)return;
-        el.oninput=el.onchange=()=>{l[f]=(f==='qtd'||f==='valor')?num(el.value):el.value;saveDraft();recalc()}});
+        el.oninput=el.onchange=()=>{l[f]=(f==='qtd'||f==='valor')?num(el.value):el.value;if(f==='unid'&&!l.itemId)l.hUn=l.unid==='h'?1:0;saveDraft();recalc()}});
     });
   });
   recalc();
@@ -533,40 +633,90 @@ function recalc(){
   document.getElementById('sum-adj').innerHTML=adj+'<hr>';
   document.getElementById('sum-total').textContent=brl(r.total);
   document.getElementById('sum-meta').textContent=r.horas?`Horas estimadas: ${fmtQ(r.horas)} h`:'';
+  const ci=custoInfo(),ana=document.getElementById('sum-ana');
+  if(!on.length||!r.total){ana.style.display='none'}else{ana.style.display='';
+    const cls=r.lucro>=0?'pos':'neg';
+    ana.innerHTML=`<h4>Análise <span>só você vê · não vai no PDF</span></h4>
+      <div class="line"><span>Custo do seu tempo (${fmtQ(r.horas)} h × ${brl(ci.hora)})</span><span class="mono">${brl(r.custoHoras)}</span></div>
+      ${r.cDir?`<div class="line"><span>Custos diretos</span><span class="mono">${brl(r.cDir)}</span></div>`:''}
+      <div class="line"><span>Nota fiscal (${fmtQ(ci.nf*100)}%)</span><span class="mono">${brl(r.nfV)}</span></div>
+      <div class="line lucro"><span>Lucro</span><span class="mono ${cls}">${brl(r.lucro)} (${fmtQ(r.margemReal*100)}%)</span></div>`;
+  }
 }
 
 /* ---------- value tables ---------- */
 function renderVal(){
+  const ci=custoInfo();
+  document.getElementById('val-banner').innerHTML=`<span style="font-size:13.5px;color:var(--muted)">Seu custo por hora: <b class="mono" style="color:var(--text)">${brl(ci.hora)}</b> &nbsp;·&nbsp; preço sugerido por hora (margem ${fmtQ(ci.mg*100)}% + NF ${fmtQ(ci.nf*100)}%): <b class="mono" style="color:var(--ok)">${brl(ci.sugHora)}</b> &nbsp;<a href="#" id="go-cus" style="color:var(--accent)">ajustar custos</a></span>`;
+  document.getElementById('go-cus').onclick=e=>{e.preventDefault();document.querySelector('nav.tabs [data-tab=cus]').click()};
+  const sugBtn=it=>{const sg=itemSug(it.hUn,it.cDir,ci);if(!sg)return '';const low=num(it.valor)<sg*0.98;
+    return `<button class="sug ${low?'low':''}" data-act="sug" title="Usar preço sugerido">${low?'abaixo do sugerido: ':'sugerido: '}${brl(sg)}</button>`};
   const box=document.getElementById('val-tables');
   box.innerHTML=SVCS.map(s=>`<div class="card svc" style="--c:${s.cor}" data-k="${s.k}">
     <div class="svc-head"><h3><span class="dot"></span>${s.nome}</h3></div>
-    <table class="ctable"><thead><tr><th>Item / descrição</th><th class="w-un">Unidade</th><th class="w-v">Valor (R$)</th><th class="w-c" style="text-align:center">Complexidade</th><th class="w-x"></th></tr></thead>
+    <table class="ctable"><thead><tr><th>Item / descrição</th><th class="w-un">Unidade</th><th class="w-v">Valor de venda (R$)</th><th class="w-h">Horas/un</th><th class="w-cd">Custo direto (R$/un)</th><th class="w-c" style="text-align:center">Complexidade</th><th class="w-x"></th></tr></thead>
     <tbody>${cfg.itens[s.k].map((it,i)=>`<tr data-i="${i}">
       <td><input data-f="desc" value="${esc(it.desc)}"></td>
-      <td><select data-f="unid">${UNITS.concat(UNITS.includes(it.unid)?[]:[it.unid]).map(u=>`<option ${u===it.unid?'selected':''}>${esc(u)}</option>`).join('')}</select></td>
-      <td><input type="number" step="0.01" min="0" data-f="valor" value="${esc(it.valor)}"></td>
+      <td data-l="Unidade"><select data-f="unid">${UNITS.concat(UNITS.includes(it.unid)?[]:[it.unid]).map(u=>`<option ${u===it.unid?'selected':''}>${esc(u)}</option>`).join('')}</select></td>
+      <td data-l="Valor de venda (R$)"><input type="number" step="0.01" min="0" data-f="valor" value="${esc(it.valor)}"><span data-sug>${sugBtn(it)}</span></td>
+      <td data-l="Horas/un"><input type="number" step="0.25" min="0" data-f="hUn" value="${esc(it.hUn)}"></td>
+      <td data-l="Custo direto (R$/un)"><input type="number" step="0.01" min="0" data-f="cDir" value="${esc(it.cDir)}"></td>
       <td class="c"><input type="checkbox" data-f="comp" ${it.comp?'checked':''}></td>
-      <td><button class="x" data-act="del" title="Remover">×</button></td></tr>`).join('')}</tbody></table>
+      <td class="tx"><button class="x" data-act="del" title="Remover">×</button></td></tr>`).join('')}</tbody></table>
     <div style="margin-top:10px"><button class="btn ghost sm" data-act="add">+ Adicionar item</button></div>
   </div>`).join('');
   box.querySelectorAll('.card').forEach(card=>{
     const k=card.dataset.k;
-    card.querySelector('[data-act=add]').onclick=()=>{cfg.itens[k].push({id:uid(),desc:'Novo item',unid:'h',valor:0,comp:true});saveCfg();renderVal()};
+    card.querySelector('[data-act=add]').onclick=()=>{cfg.itens[k].push({id:uid(),desc:'Novo item',unid:'h',valor:0,comp:true,hUn:1,cDir:0});saveCfg();renderVal()};
     card.querySelectorAll('tr[data-i]').forEach(tr=>{
       const it=cfg.itens[k][+tr.dataset.i];
       tr.querySelector('[data-act=del]').onclick=()=>{cfg.itens[k].splice(+tr.dataset.i,1);saveCfg();renderVal()};
+      const upd=()=>{const sp=tr.querySelector('[data-sug]');sp.innerHTML=sugBtn(it);bindSug()};
+      const bindSug=()=>{const b=tr.querySelector('[data-act=sug]');if(b)b.onclick=()=>{it.valor=Math.round(itemSug(it.hUn,it.cDir,custoInfo())*100)/100;tr.querySelector('[data-f=valor]').value=it.valor;saveCfg();upd();toast('Preço sugerido aplicado')}};
+      bindSug();
       tr.querySelectorAll('[data-f]').forEach(el=>{el.oninput=el.onchange=()=>{
-        const f=el.dataset.f;it[f]=f==='comp'?el.checked:f==='valor'?num(el.value):el.value;saveCfg();
+        const f=el.dataset.f;it[f]=f==='comp'?el.checked:['valor','hUn','cDir'].includes(f)?num(el.value):el.value;
+        if(f==='unid'&&it.unid==='h'&&!num(it.hUn)){it.hUn=1;tr.querySelector('[data-f=hUn]').value=1}
+        saveCfg();upd();
       }});
     });
   });
 }
+function renderCustos(){
+  const C=cfg.custos;
+  const fx=document.getElementById('fixos');
+  fx.innerHTML=C.fixos.map((f,i)=>`<div class="costrow" data-i="${i}"><input data-f="desc" value="${esc(f.desc)}"><input type="number" step="0.01" min="0" data-f="valor" value="${esc(f.valor)}"><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum custo fixo.</div>';
+  fx.querySelectorAll('.costrow').forEach(row=>{const f=C.fixos[+row.dataset.i];
+    row.querySelector('[data-act=del]').onclick=()=>{C.fixos.splice(+row.dataset.i,1);saveCfg();renderCustos()};
+    row.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{f[el.dataset.f]=el.dataset.f==='valor'?num(el.value):el.value;saveCfg();custosTot()})});
+  const eqd=document.getElementById('equips');
+  eqd.innerHTML=C.equip.map((e,i)=>`<div class="costrow eq" data-i="${i}"><input data-f="desc" value="${esc(e.desc)}"><input type="number" step="0.01" min="0" data-f="valor" value="${esc(e.valor)}" title="Valor (R$)"><input type="number" step="0.5" min="0" data-f="anos" value="${esc(e.anos)}" title="Vida útil (anos)"><span class="pm mono" data-pm></span><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum equipamento.</div>';
+  eqd.querySelectorAll('.costrow').forEach(row=>{const e=C.equip[+row.dataset.i];
+    row.querySelector('[data-act=del]').onclick=()=>{C.equip.splice(+row.dataset.i,1);saveCfg();renderCustos()};
+    row.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{e[el.dataset.f]=el.dataset.f==='desc'?el.value:num(el.value);saveCfg();custosTot()})});
+  custosTot();
+}
+function custosTot(){
+  const C=cfg.custos,ci=custoInfo();
+  document.querySelectorAll('#equips .costrow').forEach(row=>{const e=C.equip[+row.dataset.i];
+    row.querySelector('[data-pm]').textContent=(num(e.anos)>0?brl(num(e.valor)/(num(e.anos)*12)):'-')+'/mês'});
+  document.getElementById('tot-fixos').textContent=brl(ci.fixos);
+  document.getElementById('tot-equips').textContent=brl(ci.equip);
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><small>Custo mensal total</small><b class="mono">${brl(ci.mensal)}</b><span>fixos + equipamentos</span></div>
+    <div class="kpi"><small>Seu custo por hora</small><b class="mono">${brl(ci.hora)}</b><span>${brl(ci.mensal)} ÷ ${fmtQ(Math.max(num(C.horasMes),1))} h</span></div>
+    <div class="kpi"><small>Preço mínimo por hora</small><b class="mono">${brl(ci.minHora)}</b><span>só cobre custo + nota fiscal</span></div>
+    <div class="kpi hl"><small>Preço sugerido por hora</small><b class="mono">${brl(ci.sugHora)}</b><span>com ${fmtQ(ci.mg*100)}% de margem + ${fmtQ(ci.nf*100)}% de NF</span></div>`;
+}
+document.getElementById('add-fixo').onclick=()=>{cfg.custos.fixos.push({id:uid(),desc:'Novo custo',valor:0});saveCfg();renderCustos()};
+document.getElementById('add-equip').onclick=()=>{cfg.custos.equip.push({id:uid(),desc:'Novo equipamento',valor:0,anos:3});saveCfg();renderCustos()};
+
 function bindCfg(){
   document.querySelectorAll('[data-cfg]').forEach(el=>{
     const path=el.dataset.cfg.split('.');
     const get=()=>path.reduce((o,p)=>o?.[p],cfg);
     el.value=get()??'';
-    el.oninput=()=>{let o=cfg;path.slice(0,-1).forEach(p=>o=o[p]);o[path.at(-1)]=el.type==='number'?num(el.value):el.value;saveCfg();recalc()};
+    el.oninput=()=>{let o=cfg;path.slice(0,-1).forEach(p=>o=o[p]);o[path.at(-1)]=el.type==='number'?num(el.value):el.value;saveCfg();recalc();if(path[0]==='custos')custosTot()};
   });
   const img=document.getElementById('logo-img');
   const show=()=>{img.src=cfg.emp.logo||'';img.style.display=cfg.emp.logo?'block':'none'};show();
@@ -868,7 +1018,7 @@ document.getElementById('b-imp').onclick=()=>{
 /* ---------- toast ---------- */
 let tt;function toast(m){if(!m)return;const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3400)}
 
-function initAll(){bindQuote();bindCfg();renderChips();renderBlocks();renderVal()}
+function initAll(){bindQuote();bindCfg();renderChips();renderBlocks();renderVal();renderCustos()}
 initAll();
 
 /* ---------- app instalável ---------- */
