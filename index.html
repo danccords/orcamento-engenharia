@@ -31,7 +31,8 @@ header.top{position:sticky;top:0;z-index:20;background:rgba(20,22,26,.92);backdr
 .brand h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
 .brand h1 span{color:var(--accent)}
 .brand p{margin:0;color:var(--muted);font-size:13px}
-nav.tabs{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+nav.tabs{display:flex;gap:4px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{background:none;border:0;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
 nav.tabs button.on{color:var(--text);border-color:var(--accent)}
 main{max-width:1180px;margin:0 auto;padding:20px 18px 80px}
@@ -466,7 +467,9 @@ function mergeCfg(c){
   const m={...d,...c,itens:{...d.itens,...(c.itens||{})},cx:{...d.cx,...(c.cx||{})},emp:{...d.emp,...(c.emp||{})},custos:{...d.custos,...(c.custos||{})}};
   if(!c.custos&&num(c.impPct)>0)m.custos.nf=num(c.impPct);
   m.impPct=0;
-  Object.values(m.itens).forEach(list=>list.forEach(it=>{if(it.hUn==null)it.hUn=it.unid==='h'?1:0;if(it.cDir==null)it.cDir=0}));
+  const defs={};Object.values(d.itens).forEach(l=>l.forEach(it=>defs[it.desc]=it));
+  Object.values(m.itens).forEach(list=>list.forEach(it=>{const df=defs[it.desc];
+    if(it.hUn==null)it.hUn=df?df.hUn:(it.unid==='h'?1:0);if(it.cDir==null)it.cDir=df?df.cDir:0}));
   return m;
 }
 let cfg=mergeCfg(load(LS_CFG));
