@@ -105,7 +105,20 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .empty{color:var(--dim);font-size:14px;text-align:center;padding:24px;border:1px dashed var(--line);border-radius:10px}
 
 /* summary */
-.sum{position:sticky;top:120px}
+.sum{position:sticky;top:118px;display:flex;flex-direction:column;max-height:calc(100vh - 134px);padding:0;overflow:hidden}
+.sum-body{padding:18px 18px 8px;overflow-y:auto;min-height:0;flex:1}
+.sum-actions{padding:12px 18px 16px;border-top:1px solid var(--line);background:var(--panel)}
+.sum-mini{display:none}
+#mbar{display:none}
+@media(max-width:920px){
+  .sum{position:static;max-height:none}
+  #mbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(27,30,35,.97);border-top:1px solid var(--line2);backdrop-filter:blur(8px)}
+  #mbar .t{flex:1;min-width:0}
+  #mbar small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  #mbar b{font-size:20px;color:var(--accent)}
+  body.orc main{padding-bottom:110px}
+  body:not(.orc) #mbar{display:none}
+}
 .sum .line{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:14px;color:var(--muted)}
 .sum .line span:last-child{color:var(--text)}
 .sum .line.neg span:last-child{color:var(--ok)}
@@ -220,7 +233,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 #print .foot{margin-top:28px;font-size:9pt;color:#666;text-align:center;border-top:1px solid #ddd;padding-top:8px}
 </style>
 </head>
-<body>
+<body class="orc">
 
 <header class="top">
   <div class="top-in">
@@ -282,6 +295,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
     </div>
 
     <aside class="card sum" id="sum">
+     <div class="sum-body">
       <h2>Resultado</h2>
       <div id="sum-lines"></div>
       <div class="adj">
@@ -292,7 +306,9 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
       <div class="total"><span>Total geral</span><span class="mono" id="sum-total">R$ 0,00</span></div>
       <div class="meta" id="sum-meta"></div>
       <div class="ana" id="sum-ana"></div>
-      <div class="actions" style="margin-top:16px">
+     </div>
+     <div class="sum-actions">
+      <div class="actions">
         <button class="btn pri" id="b-pdf">Gerar orçamento (PDF)</button>
       </div>
       <div class="actions" style="margin-top:8px">
@@ -300,6 +316,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
         <button class="btn" id="b-copy">Copiar resumo</button>
         <button class="btn" id="b-new">Novo orçamento</button>
       </div>
+     </div>
     </aside>
   </div>
 </section>
@@ -398,6 +415,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 </section>
 </main>
 
+<div id="mbar"><div class="t"><small>Total geral</small><b class="mono" id="mbar-total">R$ 0,00</b></div><button class="btn pri" id="mbar-pdf">Gerar PDF</button></div>
 <div class="modal" id="modal"><div class="box" id="modal-box"></div></div>
 <div id="toast"></div>
 <div id="print"></div>
@@ -408,8 +426,8 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 const LS_CFG='dhEng.cfg.v1', LS_HIST='dhEng.hist.v1', LS_DRAFT='dhEng.draft.v1';
 const SVCS=[
   {k:'scan', nome:'Escaneamento 3D', desc:'Captura / digitalização', cor:'var(--scan)', hex:'#1d5a9e'},
-  {k:'model',nome:'Modelagem 3D',    desc:'Engenharia reversa / CAD', cor:'var(--model)', hex:'#c98a0c'},
-  {k:'proj', nome:'Projetos',        desc:'Engenharia / detalhamento', cor:'var(--proj)', hex:'#8a63d2'}
+  {k:'model',nome:'Modelagem 3D',    desc:'Engenharia reversa / CAD', cor:'var(--model)', hex:'#2b7a8c'},
+  {k:'proj', nome:'Projetos',        desc:'Engenharia / detalhamento', cor:'var(--proj)', hex:'#4a4f9e'}
 ];
 const UNITS=['h','un','peça','folha','km','m²','dia','imagem','relatório'];
 const CX=[['baixa','Baixa'],['media','Média'],['alta','Alta']];
@@ -535,6 +553,7 @@ function calc(){
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.tab));
+  document.body.classList.toggle('orc',b.dataset.tab==='orc');
   if(b.dataset.tab==='his')renderHist();
   if(b.dataset.tab==='orc')renderBlocks();
   if(b.dataset.tab==='val')renderVal();
@@ -635,6 +654,7 @@ function recalc(){
   if(r.imp) adj+=`<div class="line"><span>Impostos (${fmtQ(cfg.impPct)}%)</span><span class="mono">${brl(r.imp)}</span></div>`;
   document.getElementById('sum-adj').innerHTML=adj+'<hr>';
   document.getElementById('sum-total').textContent=brl(r.total);
+  document.getElementById('mbar-total').textContent=brl(r.total);
   document.getElementById('sum-meta').textContent=r.horas?`Horas estimadas: ${fmtQ(r.horas)} h`:'';
   const ci=custoInfo(),ana=document.getElementById('sum-ana');
   if(!on.length||!r.total){ana.style.display='none'}else{ana.style.display='';
@@ -1021,6 +1041,7 @@ document.getElementById('b-imp').onclick=()=>{
 /* ---------- toast ---------- */
 let tt;function toast(m){if(!m)return;const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3400)}
 
+document.getElementById('mbar-pdf').onclick=()=>document.getElementById('b-pdf').click();
 function initAll(){bindQuote();bindCfg();renderChips();renderBlocks();renderVal();renderCustos()}
 initAll();
 
