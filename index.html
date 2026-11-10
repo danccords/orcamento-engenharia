@@ -158,11 +158,14 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 /* print */
 #print{display:none}
 @media print{
-  @page{size:A4;margin:14mm}
+  @page{size:A4;margin:0}
   body{background:#fff;color:#111}
   body > *:not(#print){display:none !important}
-  #print{display:block;font-family:Inter,Arial,sans-serif;color:#1a1a1a;font-size:11pt}
+  #print{display:block;font-family:Inter,Arial,sans-serif;color:#1a1a1a;font-size:11pt;padding:0 15mm}
+  html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+#print table.pwrap,#print table.pwrap>*>tr>td{border:0;padding:0;margin:0;background:none}
+#print .pspace{height:14mm}
 #print .ph{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:16px}
 #print .ph img{max-height:60px;max-width:200px}
 #print .ph h1{font-size:18pt;margin:0}
@@ -642,7 +645,7 @@ function buildPrint(){
     ${q.svc[s.k].linhas.map(l=>{const c=lineCalc(s.k,l);return `<tr><td>${esc(l.desc)}</td><td class="n">${fmtQ(l.qtd)}</td><td>${esc(l.unid)}</td><td class="n">${brl(c.unit)}</td><td class="n">${brl(c.sub)}</td></tr>`}).join('')}
     <tr class="stot"><td colspan="4" class="n">Subtotal ${s.nome}</td><td class="n">${brl(r.svcs[s.k].sub)}</td></tr></tbody></table></div>`).join('');
   const contact=[E.email,E.tel,E.cnpj&&('CNPJ '+E.cnpj),E.cidade].filter(Boolean).map(esc).join(' • ');
-  document.getElementById('print').innerHTML=`
+  document.getElementById('print').innerHTML=`<table class="pwrap"><thead><tr><td><div class="pspace"></div></td></tr></thead><tfoot><tr><td><div class="pspace"></div></td></tr></tfoot><tbody><tr><td>
     <div class="ph"><div>${E.logo?`<img src="${E.logo}" alt="">`:`<h1>${esc(E.nome)}</h1>`}
       ${E.logo?`<div style="font-weight:700;margin-top:4px">${esc(E.nome)}</div>`:''}<div class="co">${esc(E.sub)}</div><div class="co">${contact}</div></div>
       <div class="num">Orçamento<b>Nº ${esc(q.numero)}</b>${brDate(q.data)}</div></div>
@@ -662,7 +665,7 @@ function buildPrint(){
       <div><b>Prazo:</b> ${esc(q.prazo)}</div><div><b>Pagamento:</b> ${esc(q.fat)}</div>
       <div><b>Validade:</b> ${esc(q.validade)}</div></div>
       ${q.obs?`<div class="msg" style="margin-top:8px">${esc(q.obs)}</div>`:''}</div>
-    <div class="foot">${esc(E.nome)}${contact?' • '+contact:''}</div>`;
+    <div class="foot">${esc(E.nome)}${contact?' • '+contact:''}</div></td></tr></tbody></table>`;
 }
 document.getElementById('b-pdf').onclick=()=>{
   if(!SVCS.some(s=>q.svc[s.k].on)){toast('Selecione pelo menos um serviço');return}
