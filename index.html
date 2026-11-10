@@ -166,11 +166,21 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .costhead{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
 .costtot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 .costtot b{color:var(--text)}
+label.lf{display:block;min-width:0}
 @media(max-width:640px){
-  .costrow.eq{grid-template-columns:1fr 1fr 34px}
-  .costrow.eq>:first-child{grid-column:1/3}
-  .costrow.eq .pm{grid-column:1/3;text-align:left}
+  .costhead:not(.eq){display:none}
+  .costrow.fxr{position:relative;grid-template-columns:1fr;gap:8px;background:var(--panel2);border-radius:8px;padding:10px;margin-bottom:8px}
+  .costrow.fxr .ed{width:calc(100% - 34px)}
+  .costrow.fxr .x{position:absolute;top:14px;right:6px}
+  .costrow.fxr label.lf::before{content:attr(data-l);display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .costrow.fxr input{background:var(--bg)}
+  .costrow.eq{position:relative;grid-template-columns:1fr 1fr;gap:8px;background:var(--panel2);border-radius:8px;padding:10px;margin-bottom:8px}
+  .costrow.eq .ed{grid-column:1/-1;width:calc(100% - 34px)}
+  .costrow.eq .x{position:absolute;top:14px;right:6px}
+  .costrow.eq label.lf::before{content:attr(data-l);display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .costrow.eq .pm{grid-column:1/-1;text-align:left;font-size:13.5px;color:var(--text)}
   .costhead.eq{display:none}
+  .costrow.eq input{background:var(--bg)}
 }
 .ana{margin-top:14px;padding:12px;border:1px dashed var(--line2);border-radius:10px}
 .ana h4{margin:0 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between}
@@ -708,12 +718,12 @@ function renderVal(){
 function renderCustos(){
   const C=cfg.custos;
   const fx=document.getElementById('fixos');
-  fx.innerHTML=C.fixos.map((f,i)=>`<div class="costrow" data-i="${i}"><input data-f="desc" value="${esc(f.desc)}"><input type="number" step="0.01" min="0" data-f="valor" value="${esc(f.valor)}"><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum custo fixo.</div>';
+  fx.innerHTML=C.fixos.map((f,i)=>`<div class="costrow fxr" data-i="${i}"><input class="ed" data-f="desc" value="${esc(f.desc)}"><label class="lf" data-l="Valor por mês (R$)"><input type="number" inputmode="decimal" step="0.01" min="0" data-f="valor" value="${esc(f.valor)}"></label><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum custo fixo.</div>';
   fx.querySelectorAll('.costrow').forEach(row=>{const f=C.fixos[+row.dataset.i];
     row.querySelector('[data-act=del]').onclick=()=>{C.fixos.splice(+row.dataset.i,1);saveCfg();renderCustos()};
     row.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{f[el.dataset.f]=el.dataset.f==='valor'?num(el.value):el.value;saveCfg();custosTot()})});
   const eqd=document.getElementById('equips');
-  eqd.innerHTML=C.equip.map((e,i)=>`<div class="costrow eq" data-i="${i}"><input data-f="desc" value="${esc(e.desc)}"><input type="number" step="0.01" min="0" data-f="valor" value="${esc(e.valor)}" title="Valor (R$)"><input type="number" step="0.5" min="0" data-f="anos" value="${esc(e.anos)}" title="Vida útil (anos)"><span class="pm mono" data-pm></span><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum equipamento.</div>';
+  eqd.innerHTML=C.equip.map((e,i)=>`<div class="costrow eq" data-i="${i}"><input class="ed" data-f="desc" value="${esc(e.desc)}"><label class="lf" data-l="Valor (R$)"><input type="number" inputmode="decimal" step="0.01" min="0" data-f="valor" value="${esc(e.valor)}"></label><label class="lf" data-l="Vida útil (anos)"><input type="number" inputmode="decimal" step="0.5" min="0" data-f="anos" value="${esc(e.anos)}"></label><span class="pm mono" data-pm></span><button class="x" data-act="del" title="Remover">×</button></div>`).join('')||'<div class="empty">Nenhum equipamento.</div>';
   eqd.querySelectorAll('.costrow').forEach(row=>{const e=C.equip[+row.dataset.i];
     row.querySelector('[data-act=del]').onclick=()=>{C.equip.splice(+row.dataset.i,1);saveCfg();renderCustos()};
     row.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{e[el.dataset.f]=el.dataset.f==='desc'?el.value:num(el.value);saveCfg();custosTot()})});
