@@ -340,7 +340,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 "use strict";
 const LS_CFG='dhEng.cfg.v1', LS_HIST='dhEng.hist.v1', LS_DRAFT='dhEng.draft.v1';
 const SVCS=[
-  {k:'scan', nome:'Escaneamento 3D', desc:'Captura / digitalização', cor:'var(--scan)', hex:'#2a9fc4'},
+  {k:'scan', nome:'Escaneamento 3D', desc:'Captura / digitalização', cor:'var(--scan)', hex:'#1d5a9e'},
   {k:'model',nome:'Modelagem 3D',    desc:'Engenharia reversa / CAD', cor:'var(--model)', hex:'#c98a0c'},
   {k:'proj', nome:'Projetos',        desc:'Engenharia / detalhamento', cor:'var(--proj)', hex:'#8a63d2'}
 ];
@@ -681,7 +681,7 @@ function montarPDF(k){
   const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'});
   const r=calc(),E=cfg.emp;
   const W=210,M=16,CW=W-2*M,BOT=276;
-  const ACC=[42,159,196],INK=[20,22,26],MUT=[110,114,120],LINE=[225,222,215];
+  const ACC=[22,64,128],INK=[20,22,26],MUT=[110,114,120],LINE=[225,222,215];
   const fs=n=>d.setFontSize(n*Math.max(k,.82)); // fonte encolhe menos que os espaços
   const L=n=>n*k;                                 // espaçamentos
   let y=15;
@@ -784,12 +784,12 @@ function montarPDF(k){
   // ---- total
   const hT=L(17);
   quebra(hT+4);
-  d.setFillColor(20,22,26);d.roundedRect(M,y,CW,hT,2.5,2.5,'F');
-  d.setTextColor(170,174,180);fs(8);d.setFont('helvetica','bold');
+  d.setFillColor(...ACC);d.roundedRect(M,y,CW,hT,2.5,2.5,'F');
+  d.setTextColor(190,205,230);fs(8);d.setFont('helvetica','bold');
   T('TOTAL GERAL',M+6,y+hT*0.4);
   d.setTextColor(255,255,255);fs(9.5);d.setFont('helvetica','normal');
   T(ativos.map(s=>s.nome).join(' + ')+(r.horas?'  ·  '+fmtQ(r.horas)+' h estimadas':''),M+6,y+hT*0.72);
-  d.setTextColor(...ACC);fs(17);d.setFont('helvetica','bold');
+  d.setTextColor(255,255,255);fs(17);d.setFont('helvetica','bold');
   T(brl(r.total),W-M-6,y+hT*0.66,{align:'right'});
   y+=hT+L(7);
 
