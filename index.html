@@ -507,12 +507,12 @@ function saveHist(){if(!save(LS_HIST,hist))toast('Não foi possível salvar o hi
 
 function numero(){return new Date().getFullYear()+'-'+String(cfg.seq).padStart(3,'0')}
 function newQuote(){
-  const svc={};SVCS.forEach(s=>svc[s.k]={on:false,cx:'media',linhas:[]});
+  const svc={};SVCS.forEach(s=>svc[s.k]={on:false,cx:'baixa',linhas:[]});
   return {id:uid(),saved:false,numero:numero(),data:today(),cliente:'',doc:'',contato:'',endereco:'',cidade:'',descricao:'',
     svc,urg:false,desc:0,prazo:cfg.emp.prazo,fat:cfg.emp.fat,validade:cfg.emp.validade,obs:''};
 }
 let q=load(LS_DRAFT)||newQuote();
-SVCS.forEach(s=>{if(!q.svc[s.k])q.svc[s.k]={on:false,cx:'media',linhas:[]}});
+SVCS.forEach(s=>{if(!q.svc[s.k])q.svc[s.k]={on:false,cx:'baixa',linhas:[]}});
 let draftT;function saveDraft(){clearTimeout(draftT);draftT=setTimeout(()=>save(LS_DRAFT,q),250)}
 
 /* ---------- custos ---------- */
@@ -539,7 +539,15 @@ function lineCalc(svcK,l){
   const unit=num(l.valor)*f;
   return {unit,sub:unit*num(l.qtd)};
 }
+function syncLines(){ // linhas ligadas à tabela acompanham os valores atuais, a não ser que o valor tenha sido editado no orçamento
+  SVCS.forEach(s=>q.svc[s.k].linhas.forEach(l=>{
+    if(!l.itemId||l.manual)return;
+    const it=cfg.itens[s.k].find(x=>x.id===l.itemId);if(!it)return;
+    l.desc=it.desc;l.unid=it.unid;l.valor=num(it.valor);l.comp=!!it.comp;l.hUn=num(it.hUn);l.cDir=num(it.cDir);
+  }));
+}
 function calc(){
+  syncLines();
   const r={svcs:{},base:0,horas:0,cDir:0};
   SVCS.forEach(s=>{
     const S=q.svc[s.k];let sub=0,h=0,cd=0;
@@ -593,9 +601,10 @@ function renderChips(){
   const on=SVCS.filter(s=>q.svc[s.k].on).map(s=>s.nome);
   document.getElementById('combo').innerHTML=on.length?`Orçando: <b>${on.join(' + ')}</b>`:'Nenhum serviço selecionado.';
 }
-function lineFrom(it){return {itemId:it.id,desc:it.desc,unid:it.unid,valor:it.valor,qtd:1,comp:!!it.comp,hUn:num(it.hUn),cDir:num(it.cDir)}}
+function lineFrom(it){return {itemId:it.id,desc:it.desc,unid:it.unid,valor:it.valor,qtd:1,comp:!!it.comp,hUn:num(it.hUn),cDir:num(it.cDir),manual:false}}
 
 function renderBlocks(){
+  syncLines();
   const box=document.getElementById('svc-blocks');
   const on=SVCS.filter(s=>q.svc[s.k].on);
   if(!on.length){box.innerHTML='';recalc();return}
@@ -640,7 +649,7 @@ function renderBlocks(){
         saveDraft();renderBlocks();
       };
       ['qtd','valor','desc','unid'].forEach(f=>{const el=row.querySelector(`[data-f=${f}]`);if(!el)return;
-        el.oninput=el.onchange=()=>{l[f]=(f==='qtd'||f==='valor')?num(el.value):el.value;if(f==='unid'&&!l.itemId)l.hUn=l.unid==='h'?1:0;saveDraft();recalc()}});
+        el.oninput=el.onchange=()=>{l[f]=(f==='qtd'||f==='valor')?num(el.value):el.value;if(f==='valor')l.manual=true;if(f==='unid'&&!l.itemId)l.hUn=l.unid==='h'?1:0;saveDraft();recalc()}});
     });
   });
   recalc();
@@ -673,7 +682,9 @@ function recalc(){
       <div class="line"><span>Custo do seu tempo (${fmtQ(r.horas)} h × ${brl(ci.hora)})</span><span class="mono">${brl(r.custoHoras)}</span></div>
       ${r.cDir?`<div class="line"><span>Custos diretos</span><span class="mono">${brl(r.cDir)}</span></div>`:''}
       <div class="line"><span>Nota fiscal (${fmtQ(ci.nf*100)}%)</span><span class="mono">${brl(r.nfV)}</span></div>
-      <div class="line lucro"><span>Lucro</span><span class="mono ${cls}">${brl(r.lucro)} (${fmtQ(r.margemReal*100)}%)</span></div>`;
+      <div class="line lucro"><span>Lucro</span><span class="mono ${cls}">${brl(r.lucro)}</span></div>
+      <div class="line"><span>Margem sobre o custo <small style="color:var(--dim)">(meta ${fmtQ(ci.mg*100)}%)</small></span><span class="mono ${cls}">${r.custo>0?fmtQ(r.lucro/r.custo*100)+'%':'-'}</span></div>
+      <div class="line"><span>Lucro / total cobrado</span><span class="mono">${fmtQ(r.margemReal*100)}%</span></div>`;
   }
 }
 
@@ -787,8 +798,8 @@ function renderHist(){
     </div></div>`).join('');
   box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{
     const h=hist[+b.dataset.i];
-    if(b.dataset.a==='open'){q=JSON.parse(JSON.stringify(h));delete q.total;delete q.savedAt;afterLoad();toast('Orçamento '+q.numero+' aberto')}
-    if(b.dataset.a==='dup'){q=JSON.parse(JSON.stringify(h));delete q.total;delete q.savedAt;q.id=uid();q.saved=false;q.numero=numero();q.data=today();afterLoad();toast('Cópia criada como '+q.numero)}
+    if(b.dataset.a==='open'){q=JSON.parse(JSON.stringify(h));delete q.total;delete q.savedAt;SVCS.forEach(s=>(q.svc[s.k]?.linhas||[]).forEach(l=>l.manual=true));afterLoad();toast('Orçamento '+q.numero+' aberto')}
+    if(b.dataset.a==='dup'){q=JSON.parse(JSON.stringify(h));delete q.total;delete q.savedAt;SVCS.forEach(s=>(q.svc[s.k]?.linhas||[]).forEach(l=>l.manual=false));q.id=uid();q.saved=false;q.numero=numero();q.data=today();afterLoad();toast('Cópia criada como '+q.numero)}
     if(b.dataset.a==='del'){
       if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Confirmar?';setTimeout(()=>{b.classList.remove('arm');b.textContent='Excluir'},2500);return}
       hist.splice(+b.dataset.i,1);saveHist();renderHist();
